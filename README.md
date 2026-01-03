@@ -2,8 +2,8 @@
 
 A pure JavaScript/TypeScript compiler for the Picorules clinical decision support language, designed to compile Picorules ruleblocks into optimized SQL for Oracle PL/SQL, SQL Server T-SQL, and PostgreSQL.
 
-[![npm version](https://img.shields.io/npm/v/@picorules/compiler-core.svg)](https://www.npmjs.com/package/@picorules/compiler-core)
-[![License](https://img.shields.io/npm/l/@picorules/compiler-core.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/%40picorules%2Fcompiler-core.svg)](https://www.npmjs.com/package/@picorules/compiler-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Status
 
