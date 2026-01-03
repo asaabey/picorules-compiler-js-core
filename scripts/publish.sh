@@ -22,16 +22,19 @@ echo "   Version bump: $VERSION_TYPE"
 echo "🧪 Running tests..."
 npm test
 
-# Bump version
+# Bump version and capture the new version
 echo "📝 Bumping version ($VERSION_TYPE)..."
-npm version $VERSION_TYPE
+NEW_VERSION=$(npm version $VERSION_TYPE)
+echo "   New version: $NEW_VERSION"
 
 # Publish (will open browser for passkey authentication)
 echo "🚀 Publishing to npm (browser will open for authentication)..."
 npm publish --access public
 
-# Push tags to git
-echo "📤 Pushing tags to git..."
-git push && git push --tags
+# Push commit and only the new tag (not all tags)
+echo "📤 Pushing to git..."
+git push
+echo "📤 Pushing tag $NEW_VERSION..."
+git push origin "$NEW_VERSION"
 
 echo "✅ Done! Package published successfully."
