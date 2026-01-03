@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RuleType, Dialect, DataType } from './constants';
+import { RuleType, Dialect } from './constants';
 
 // Input schemas
 export const RuleblockInputSchema = z.object({

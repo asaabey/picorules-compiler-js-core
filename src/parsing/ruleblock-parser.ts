@@ -1,7 +1,6 @@
 import { parseFetchStatement } from './fetch-statement-parser';
 import { parseComputeStatement } from './compute-statement-parser';
 import { parseBindStatement } from './bind-statement-parser';
-import { RuleType } from '../models/constants';
 import type { ParsedRuleblock, RuleblockInput } from '../models/types';
 
 /**
