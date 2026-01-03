@@ -1,6 +1,6 @@
 {
   "name": "picorules-compiler-js-core",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Pure JavaScript/TypeScript compiler for Picorules clinical decision support language",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
