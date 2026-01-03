@@ -1,9 +1,10 @@
 import { RuleblockInputSchema, CompilerOptionsSchema } from './models/schemas';
 import type { RuleblockInput, CompilerOptions, CompilationResult } from './models/types';
 import { parse } from './parsing';
-import { link } from './linking';
+import { link, buildDependencyGraph } from './linking';
 import { transform } from './transformation';
 import { generateSql } from './sql';
+import { generateManifest, writeManifestFile } from './manifest';
 import { Dialect } from './models/constants';
 
 /**
@@ -40,6 +41,15 @@ export function compile(
     const sql = generateSql(transformed, validatedOptions.dialect);
     const sqlGenTime = Date.now() - sqlGenStart;
 
+    // Stage 5: Generate manifest
+    const dependencyGraph = buildDependencyGraph(transformed);
+    const manifest = generateManifest(transformed, dependencyGraph, validatedOptions.dialect);
+
+    // Stage 6: Write manifest file (if path specified)
+    if (validatedOptions.manifestPath) {
+      writeManifestFile(manifest, validatedOptions.manifestPath);
+    }
+
     const totalTime = Date.now() - startTime;
 
     return {
@@ -56,6 +66,7 @@ export function compile(
         ruleblockCount: ruleblocks.length,
         cacheHitRate: 0,
       },
+      manifest,
     };
   } catch (error) {
     return {

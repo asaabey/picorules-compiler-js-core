@@ -1,6 +1,6 @@
 # Picorules Compiler JS Core
 
-A pure JavaScript/TypeScript compiler for the Picorules clinical decision support language, designed to compile Picorules ruleblocks into optimized SQL for Oracle PL/SQL and SQL Server T-SQL.
+A pure JavaScript/TypeScript compiler for the Picorules clinical decision support language, designed to compile Picorules ruleblocks into optimized SQL for Oracle PL/SQL, SQL Server T-SQL, and PostgreSQL.
 
 [![npm version](https://img.shields.io/npm/v/picorules-compiler-js-core.svg)](https://www.npmjs.com/package/picorules-compiler-js-core)
 [![License](https://img.shields.io/npm/l/picorules-compiler-js-core.svg)](LICENSE)
@@ -12,7 +12,7 @@ A pure JavaScript/TypeScript compiler for the Picorules clinical decision suppor
 ## Features
 
 - ✅ **Pure TypeScript**: Full type safety and IDE support
-- ✅ **Multi-Dialect**: Supports Oracle PL/SQL and SQL Server T-SQL
+- ✅ **Multi-Dialect**: Supports Oracle PL/SQL, SQL Server T-SQL, and PostgreSQL
 - ✅ **18 Functions**: Complete Picorules function library
 - ✅ **Cross-Ruleblock References**: Automatic dependency resolution
 - ✅ **Transformation Pipeline**: Subset selection and pruning
@@ -139,7 +139,7 @@ compile(ruleblocks, {
   - `text: string` - Picorules code
   - `isActive: boolean` - Whether active
 - `options: CompilerOptions`
-  - `dialect: Dialect` - ORACLE or MSSQL
+  - `dialect: Dialect` - ORACLE, MSSQL, or POSTGRESQL
   - `subset?: string[]` - Filter ruleblocks
   - `pruneInputs?: string[]` - Keep descendants
   - `pruneOutputs?: string[]` - Keep ancestors
@@ -154,10 +154,30 @@ compile(ruleblocks, {
 ## SQL Dialect Support
 
 ### Oracle PL/SQL
-Uses `CREATE TABLE AS`, `LISTAGG`, `MEDIAN()`, `REGR_*`, `USING (eid)`
+- `CREATE TABLE AS` for table creation
+- `LISTAGG` for string aggregation
+- `MEDIAN()` built-in function
+- `REGR_*` built-in regression functions
+- `USING (eid)` for join syntax
+- `SYSDATE` for current date
 
 ### SQL Server T-SQL
-Uses `SELECT INTO`, `STRING_AGG`, `PERCENTILE_CONT`, manual regression, `ON ... =`
+- `SELECT INTO` for table creation
+- `STRING_AGG` for string aggregation
+- `PERCENTILE_CONT` for median
+- Manual regression formulas
+- `ON ... =` for join syntax
+- `GETDATE()` for current date
+
+### PostgreSQL
+- `CREATE TABLE AS` for table creation
+- `STRING_AGG` with embedded `ORDER BY` for string aggregation
+- `PERCENTILE_CONT` for median
+- Manual regression formulas
+- `USING (eid)` for join syntax
+- `CURRENT_DATE` for current date
+- `INTERVAL` syntax for date arithmetic
+- `::type` casting syntax
 
 ## Development
 

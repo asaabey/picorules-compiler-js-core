@@ -17,6 +17,8 @@ export const CompilerOptionsSchema = z.object({
   subset: z.array(z.string()).optional(), // List of ruleblock names to include
   pruneInputs: z.array(z.string()).optional(), // Keep only descendants of these
   pruneOutputs: z.array(z.string()).optional(), // Keep only ancestors of these
+  // Manifest output options
+  manifestPath: z.string().optional(), // Path to write manifest JSON file
 });
 
 // Parsed rule schemas
@@ -63,6 +65,38 @@ export const ParsedRuleblockSchema = z.object({
   ])),
 });
 
+// Manifest schemas for batch compilation
+export const ManifestEntrySchema = z.object({
+  /** Ruleblock identifier */
+  ruleblockId: z.string(),
+  /** Execution order (0-based, dependencies first) */
+  executionOrder: z.number().int().min(0),
+  /** Output table name (e.g., "rout_ckd" or "SROUT_ckd") */
+  targetTable: z.string(),
+  /** List of ruleblock IDs this depends on */
+  dependencies: z.array(z.string()),
+  /** List of output variables/attributes */
+  outputVariables: z.array(z.string()),
+  /** Index into the sql[] array */
+  sqlIndex: z.number().int().min(0),
+});
+
+export const CompilationManifestSchema = z.object({
+  /** Manifest version for forward compatibility */
+  version: z.string(),
+  /** SQL dialect used */
+  dialect: z.string(),
+  /** Timestamp of compilation */
+  compiledAt: z.string(),
+  /** Total number of ruleblocks */
+  totalRuleblocks: z.number().int().min(0),
+  /** Ordered list of ruleblock entries */
+  entries: z.array(ManifestEntrySchema),
+  /** Dependency graph as adjacency list (for visualization/debugging) */
+  dependencyGraph: z.record(z.string(), z.array(z.string())),
+});
+
+// Update CompilationResult to include manifest
 export const CompilationResultSchema = z.object({
   success: z.boolean(),
   sql: z.array(z.string()),
@@ -84,6 +118,8 @@ export const CompilationResultSchema = z.object({
     ruleblockCount: z.number(),
     cacheHitRate: z.number(),
   }).optional(),
+  /** Compilation manifest with dependency ordering */
+  manifest: CompilationManifestSchema.optional(),
 });
 
 // Type inference
@@ -93,4 +129,6 @@ export type ParsedFetchStatement = z.infer<typeof ParsedFetchStatementSchema>;
 export type ParsedComputeStatement = z.infer<typeof ParsedComputeStatementSchema>;
 export type ParsedBindStatement = z.infer<typeof ParsedBindStatementSchema>;
 export type ParsedRuleblock = z.infer<typeof ParsedRuleblockSchema>;
+export type ManifestEntry = z.infer<typeof ManifestEntrySchema>;
+export type CompilationManifest = z.infer<typeof CompilationManifestSchema>;
 export type CompilationResult = z.infer<typeof CompilationResultSchema>;

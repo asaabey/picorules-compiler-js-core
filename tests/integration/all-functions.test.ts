@@ -20,7 +20,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with SUM', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('SUM(val)');
+        expect(result.sql[0]).toContain('SUM(CAST(val AS FLOAT))');
         expect(result.sql[0]).toContain('SQ_TOTAL_EGFR');
       });
     });
@@ -42,7 +42,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with AVG', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('AVG(val)');
+        expect(result.sql[0]).toContain('AVG(CAST(val AS FLOAT))');
         expect(result.sql[0]).toContain('SQ_AVG_EGFR');
       });
     });
@@ -64,7 +64,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with MIN', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('MIN(val)');
+        expect(result.sql[0]).toContain('MIN(CAST(val AS FLOAT))');
         expect(result.sql[0]).toContain('SQ_MIN_EGFR');
       });
     });
@@ -86,7 +86,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with MAX', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('MAX(val)');
+        expect(result.sql[0]).toContain('MAX(CAST(val AS FLOAT))');
         expect(result.sql[0]).toContain('SQ_MAX_EGFR');
       });
     });

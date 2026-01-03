@@ -1,4 +1,4 @@
-import type { ParsedRuleblock, ParsedComputeStatement } from '../models/types';
+import type { ParsedRuleblock, ParsedComputeStatement, ParsedFetchStatement } from '../models/types';
 import { RuleType } from '../models/constants';
 
 /**
@@ -22,7 +22,7 @@ export function extractVariableReferences(expression: string): string[] {
 }
 
 /**
- * Resolve variable references in compute statements
+ * Resolve variable references in compute and fetch statements
  */
 export function resolveReferences(ruleblock: ParsedRuleblock): ParsedRuleblock {
   const resolvedRules = ruleblock.rules.map(rule => {
@@ -44,6 +44,24 @@ export function resolveReferences(ruleblock: ParsedRuleblock): ParsedRuleblock {
         ...compute,
         references: Array.from(allReferences),
       };
+    }
+
+    // Also extract variable references from fetch statement predicates
+    if (rule.ruleType === RuleType.FETCH_STATEMENT) {
+      const fetch = rule as ParsedFetchStatement;
+      if (fetch.predicate) {
+        const refs = extractVariableReferences(fetch.predicate);
+        // Filter out 'dt', 'val', 'att', 'eid', 'loc' which are EADV column names, not variable references
+        const eadvColumns = new Set(['dt', 'val', 'att', 'eid', 'loc']);
+        const variableRefs = refs.filter(ref => !eadvColumns.has(ref.toLowerCase()));
+
+        if (variableRefs.length > 0) {
+          return {
+            ...fetch,
+            references: variableRefs,
+          };
+        }
+      }
     }
 
     return rule;

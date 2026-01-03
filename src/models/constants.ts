@@ -10,6 +10,7 @@ export enum RuleType {
 export enum Dialect {
   ORACLE = 'oracle',
   MSSQL = 'mssql',
+  POSTGRESQL = 'postgresql',
 }
 
 export enum DataType {
@@ -22,7 +23,11 @@ export enum DataType {
 // Regex patterns
 export const PATTERNS = {
   VARIABLE_NAME: /^[a-z_][a-z0-9_]*$/i,
-  FETCH_STATEMENT: /^(\w+)\s*=>\s*(\w+)\.(\w+|\[.+?\])\.(\w+)\.(\w+)\((.*?)\)(?:\.where\((.*?)\))?;?$/,
+  // Updated to support:
+  // - Single attributes with wildcards: eadv.icd_e10%.dt.min()
+  // - Multi-attributes in brackets: eadv.[att1,att2%].val.last()
+  // - Multi-line .where() clauses with any content
+  FETCH_STATEMENT: /^(\w+)\s*=>\s*(\w+)\.([\w%]+|\[.+?\])\.(\w+)\.(\w+)\((.*?)\)(?:\.where\(([\s\S]*?)\))?;?$/,
   COMPUTE_STATEMENT: /^(\w+)\s*:\s*(.+);?$/,
   COMPILER_DIRECTIVE: /^#(\w+)\((.*?),\s*(\{.+\})\);?$/,
 };

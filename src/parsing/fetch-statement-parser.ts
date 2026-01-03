@@ -1,6 +1,39 @@
 import { PATTERNS, RuleType } from '../models/constants';
 import type { ParsedFetchStatement } from '../models/types';
 
+/**
+ * Split function arguments by comma, respecting nested parentheses
+ * E.g., "round(val,0)~dt" should NOT be split, but "arg1, arg2" should become ["arg1", "arg2"]
+ */
+function splitFunctionParams(params: string): string[] {
+  if (!params) return [];
+
+  const result: string[] = [];
+  let current = '';
+  let depth = 0;
+
+  for (const char of params) {
+    if (char === '(') {
+      depth++;
+      current += char;
+    } else if (char === ')') {
+      depth--;
+      current += char;
+    } else if (char === ',' && depth === 0) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.trim()) {
+    result.push(current.trim());
+  }
+
+  return result;
+}
+
 export function parseFetchStatement(text: string): ParsedFetchStatement {
   const match = text.match(PATTERNS.FETCH_STATEMENT);
 
@@ -15,8 +48,8 @@ export function parseFetchStatement(text: string): ParsedFetchStatement {
     ? attributes.slice(1, -1).split(',').map(a => a.trim())
     : [attributes];
 
-  // Parse function parameters
-  const functionParams = params ? params.split(',').map(p => p.trim()) : [];
+  // Parse function parameters - use balanced parenthesis-aware splitting
+  const functionParams = splitFunctionParams(params);
 
   return {
     ruleType: RuleType.FETCH_STATEMENT,
