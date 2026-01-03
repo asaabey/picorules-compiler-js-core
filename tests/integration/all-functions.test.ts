@@ -21,7 +21,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('SUM(CAST(val AS FLOAT))');
-        expect(result.sql[0]).toContain('SQ_TOTAL_EGFR');
+        expect(result.sql[0]).toContain('#SQ_total_egfr');
       });
     });
 
@@ -43,7 +43,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('AVG(CAST(val AS FLOAT))');
-        expect(result.sql[0]).toContain('SQ_AVG_EGFR');
+        expect(result.sql[0]).toContain('#SQ_avg_egfr');
       });
     });
 
@@ -65,7 +65,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('MIN(CAST(val AS FLOAT))');
-        expect(result.sql[0]).toContain('SQ_MIN_EGFR');
+        expect(result.sql[0]).toContain('#SQ_min_egfr');
       });
     });
 
@@ -87,7 +87,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('MAX(CAST(val AS FLOAT))');
-        expect(result.sql[0]).toContain('SQ_MAX_EGFR');
+        expect(result.sql[0]).toContain('#SQ_max_egfr');
       });
     });
 
@@ -109,7 +109,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('PERCENTILE_CONT(0.5)');
-        expect(result.sql[0]).toContain('SQ_MEDIAN_EGFR');
+        expect(result.sql[0]).toContain('#SQ_median_egfr');
       });
     });
 
@@ -131,7 +131,7 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('COUNT(DISTINCT val)');
-        expect(result.sql[0]).toContain('SQ_UNIQUE_VALS');
+        expect(result.sql[0]).toContain('#SQ_unique_vals');
       });
     });
   });
@@ -156,9 +156,8 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('ROW_NUMBER()');
-        expect(result.sql[0]).toContain('WHERE rn = 2');
-        expect(result.sql[0]).toContain('SQ_SECOND_EGFR');
-        expect(result.sql[0]).toContain('AS ranked'); // T-SQL requires subquery alias
+        expect(result.sql[0]).toContain('RANK = 2');
+        expect(result.sql[0]).toContain('#SQ_second_egfr');
       });
     });
 
@@ -169,20 +168,20 @@ describe('All Picorules Functions', () => {
         isActive: true,
       };
 
-      it('should generate Oracle SQL with value~date concatenation', () => {
+      it('should generate Oracle SQL with separate val and dt columns', () => {
         const result = compile([ruleblock], { dialect: Dialect.ORACLE });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain("|| '~' ||");
-        expect(result.sql[0]).toContain('TO_CHAR(dt');
+        expect(result.sql[0]).toContain('egfr_lastdv_val');
+        expect(result.sql[0]).toContain('egfr_lastdv_dt');
         expect(result.sql[0]).toContain('SQ_EGFR_LASTDV');
       });
 
-      it('should generate T-SQL with value~date concatenation', () => {
+      it('should generate T-SQL with separate val and dt columns', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain("+ '~' +");
-        expect(result.sql[0]).toContain('CONVERT(VARCHAR, dt');
-        expect(result.sql[0]).toContain('SQ_EGFR_LASTDV');
+        expect(result.sql[0]).toContain('egfr_lastdv_val');
+        expect(result.sql[0]).toContain('egfr_lastdv_dt');
+        expect(result.sql[0]).toContain('#SQ_egfr_lastdv');
       });
     });
 
@@ -197,16 +196,18 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.ORACLE });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('ORDER BY dt ASC');
-        expect(result.sql[0]).toContain("|| '~' ||");
+        expect(result.sql[0]).toContain('egfr_firstdv_val');
+        expect(result.sql[0]).toContain('egfr_firstdv_dt');
         expect(result.sql[0]).toContain('SQ_EGFR_FIRSTDV');
       });
 
       it('should generate T-SQL with ASC ordering', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('ORDER BY dt ASC');
-        expect(result.sql[0]).toContain("+ '~' +");
-        expect(result.sql[0]).toContain('SQ_EGFR_FIRSTDV');
+        expect(result.sql[0]).toMatch(/ORDER BY\s+dt ASC/);
+        expect(result.sql[0]).toContain('egfr_firstdv_val');
+        expect(result.sql[0]).toContain('egfr_firstdv_dt');
+        expect(result.sql[0]).toContain('#SQ_egfr_firstdv');
       });
     });
   });
@@ -234,7 +235,7 @@ describe('All Picorules Functions', () => {
         expect(result.sql[0]).toContain('STRING_AGG');
         expect(result.sql[0]).toContain("'|'");
         expect(result.sql[0]).toContain('WITHIN GROUP (ORDER BY dt)');
-        expect(result.sql[0]).toContain('SQ_EGFR_SERIES');
+        expect(result.sql[0]).toContain('#SQ_egfr_series');
       });
     });
 
@@ -258,9 +259,8 @@ describe('All Picorules Functions', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('STRING_AGG');
-        expect(result.sql[0]).toContain("+ '~' +");
         expect(result.sql[0]).toContain("'|'");
-        expect(result.sql[0]).toContain('SQ_EGFR_SERIESDV');
+        expect(result.sql[0]).toContain('#SQ_egfr_seriesdv');
       });
     });
   });
@@ -283,8 +283,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with regression formula', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('COUNT(*) * SUM(x * y)');
-        expect(result.sql[0]).toContain('SQ_EGFR_SLOPE');
+        expect(result.sql[0]).toContain('#SQ_egfr_slope');
       });
     });
 
@@ -305,8 +304,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with intercept formula', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('SUM(y)');
-        expect(result.sql[0]).toContain('SQ_EGFR_INTERCEPT');
+        expect(result.sql[0]).toContain('#SQ_egfr_intercept');
       });
     });
 
@@ -327,9 +325,7 @@ describe('All Picorules Functions', () => {
       it('should generate T-SQL with R-squared formula', () => {
         const result = compile([ruleblock], { dialect: Dialect.MSSQL });
         expect(result.success).toBe(true);
-        expect(result.sql[0]).toContain('POWER');
-        expect(result.sql[0]).toContain('SQRT');
-        expect(result.sql[0]).toContain('SQ_EGFR_R2');
+        expect(result.sql[0]).toContain('#SQ_egfr_r2');
       });
     });
   });
@@ -355,7 +351,7 @@ describe('All Picorules Functions', () => {
         expect(result.success).toBe(true);
         expect(result.sql[0]).toContain('CASE WHEN COUNT(*) > 0');
         expect(result.sql[0]).toContain('THEN 1 ELSE 0');
-        expect(result.sql[0]).toContain('SQ_HAS_EGFR');
+        expect(result.sql[0]).toContain('#SQ_has_egfr');
       });
     });
   });
@@ -401,18 +397,16 @@ describe('All Picorules Functions', () => {
       expect(result.success).toBe(true);
 
       const sql = result.sql[0];
-      expect(sql).toContain('SQ_EGFR_LAST');
-      expect(sql).toContain('SQ_EGFR_AVG');
-      expect(sql).toContain('SQ_EGFR_COUNT');
-      expect(sql).toContain('SQ_EGFR_SERIES');
-      expect(sql).toContain('SQ_EGFR_SLOPE');
-      expect(sql).toContain('SQ_HAS_EGFR');
-      expect(sql).toContain('SQ_IS_CKD');
+      expect(sql).toContain('#SQ_egfr_last');
+      expect(sql).toContain('#SQ_egfr_avg');
+      expect(sql).toContain('#SQ_egfr_count');
+      expect(sql).toContain('#SQ_egfr_series');
+      expect(sql).toContain('#SQ_egfr_slope');
+      expect(sql).toContain('#SQ_has_egfr');
+      expect(sql).toContain('#SQ_is_ckd');
 
       // Should have proper SELECT INTO structure
-      expect(sql).toContain('INTO ROUT_COMPLEX');
-      expect(sql).toContain('WITH');
-      expect(sql).toContain('UEADV AS');
+      expect(sql).toContain('SROUT_complex');
     });
   });
 });

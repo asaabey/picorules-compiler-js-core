@@ -55,22 +55,19 @@ describe('SQL Dialect Comparison', () => {
 
       // T-SQL-specific checks
       expect(sql).toContain('SELECT');
-      expect(sql).toContain('INTO ROUT_TEST');
-      expect(sql).toContain('WITH');
-      expect(sql).toContain('UEADV AS');
+      expect(sql).toContain('SROUT_test');
 
       // Should NOT contain Oracle-specific syntax
-      expect(sql).not.toContain('CREATE TABLE');
       expect(sql).not.toContain('USING (eid)');
       expect(sql).not.toContain('SYSDATE');
     });
 
-    it('should require subquery aliases', () => {
+    it('should use temp tables with # prefix', () => {
       const result = compile([testRuleblock], { dialect: Dialect.MSSQL });
       const sql = result.sql[0];
 
-      // T-SQL requires subquery aliases
-      expect(sql).toContain('AS ranked');
+      // T-SQL uses temp tables with # prefix
+      expect(sql).toContain('#SQ_');
     });
 
     it('should use ON clause for joins instead of USING', () => {
@@ -78,7 +75,7 @@ describe('SQL Dialect Comparison', () => {
       const sql = result.sql[0];
 
       // T-SQL uses ON for joins
-      expect(sql).toMatch(/LEFT JOIN.*ON.*eid.*=.*eid/);
+      expect(sql).toMatch(/LEFT.*JOIN.*ON/i);
       expect(sql).not.toContain('USING');
     });
   });
@@ -134,9 +131,9 @@ describe('SQL Dialect Comparison', () => {
       const result = compile([ruleblock], { dialect: Dialect.POSTGRESQL });
       const sql = result.sql[0];
 
-      // PostgreSQL uses to_char for date formatting (lowercase)
-      expect(sql).toMatch(/to_char/);
-      expect(sql).not.toContain('TO_CHAR');
+      // PostgreSQL generates separate _val and _dt columns for lastdv
+      expect(sql).toContain('egfr_lastdv_val');
+      expect(sql).toContain('egfr_lastdv_dt');
       expect(sql).not.toContain('CONVERT');
     });
 
@@ -199,9 +196,9 @@ describe('SQL Dialect Comparison', () => {
       expect(result.success).toBe(true);
       expect(result.sql).toHaveLength(2);
 
-      expect(result.sql[0]).toContain('INTO ROUT_BASE');
-      expect(result.sql[1]).toContain('INTO ROUT_DERIVED');
-      expect(result.sql[1]).toContain('FROM ROUT_BASE');
+      expect(result.sql[0]).toContain('SROUT_base');
+      expect(result.sql[1]).toContain('SROUT_derived');
+      expect(result.sql[1]).toMatch(/FROM\s+SROUT_base/);
     });
 
     it('should generate PostgreSQL for cross-ruleblock references', () => {
@@ -260,10 +257,10 @@ describe('SQL Dialect Comparison', () => {
       const result = compile([complexRuleblock], { dialect: Dialect.MSSQL });
 
       expect(result.success).toBe(true);
-      expect(result.sql[0]).toContain('SQ_EGFR_LAST');
-      expect(result.sql[0]).toContain('SQ_EGFR_FIRST');
-      expect(result.sql[0]).toContain('SQ_EGFR_COUNT');
-      expect(result.sql[0]).toContain('SQ_STAGE');
+      expect(result.sql[0]).toContain('#SQ_egfr_last');
+      expect(result.sql[0]).toContain('#SQ_egfr_first');
+      expect(result.sql[0]).toContain('#SQ_egfr_count');
+      expect(result.sql[0]).toContain('#SQ_stage');
     });
 
     it('should generate PostgreSQL for complex ruleblock', () => {

@@ -2,8 +2,8 @@
 
 A pure JavaScript/TypeScript compiler for the Picorules clinical decision support language, designed to compile Picorules ruleblocks into optimized SQL for Oracle PL/SQL, SQL Server T-SQL, and PostgreSQL.
 
-[![npm version](https://img.shields.io/npm/v/picorules-compiler-js-core.svg)](https://www.npmjs.com/package/picorules-compiler-js-core)
-[![License](https://img.shields.io/npm/l/picorules-compiler-js-core.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@picorules/compiler-core.svg)](https://www.npmjs.com/package/@picorules/compiler-core)
+[![License](https://img.shields.io/npm/l/@picorules/compiler-core.svg)](LICENSE)
 
 ## Status
 
@@ -13,23 +13,23 @@ A pure JavaScript/TypeScript compiler for the Picorules clinical decision suppor
 
 - ✅ **Pure TypeScript**: Full type safety and IDE support
 - ✅ **Multi-Dialect**: Supports Oracle PL/SQL, SQL Server T-SQL, and PostgreSQL
-- ✅ **18 Functions**: Complete Picorules function library
+- ✅ **24 Functions**: Complete Picorules function library
 - ✅ **Cross-Ruleblock References**: Automatic dependency resolution
 - ✅ **Transformation Pipeline**: Subset selection and pruning
 - ✅ **Zero Dependencies**: Only runtime dependency is Zod for validation
 - ✅ **Tree-Shakeable**: ESM and CJS builds
-- ✅ **Fully Tested**: 79 tests with 100% success rate
+- ✅ **Fully Tested**: 104 tests with 100% success rate
 
 ## Installation
 
 ```bash
-npm install picorules-compiler-js-core
+npm install @picorules/compiler-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { compile, Dialect } from 'picorules-compiler-js-core';
+import { compile, Dialect } from '@picorules/compiler-core';
 
 const ruleblocks = [
   {
@@ -58,13 +58,17 @@ if (result.success) {
 
 **Aggregation** (6): `sum()`, `avg()`, `min()`, `max()`, `median()`, `distinct_count()`
 
-**Window** (3): `nth(n)`, `lastdv()`, `firstdv()`
+**Date-Value Window** (4): `lastdv()`, `firstdv()`, `maxldv()`, `minldv()`
 
-**String** (2): `serialize(delimiter)`, `serializedv(delimiter)`
+**Positional Window** (2): `nth(n)`, `minfdv()`
 
-**Statistical** (3): `regr_slope()`, `regr_intercept()`, `regr_r2()`
+**String** (4): `serialize(delimiter)`, `serialize2(delimiter)`, `serializedv(delimiter)`, `serializedv2(delimiter)`
+
+**Statistical** (4): `regr_slope()`, `regr_intercept()`, `regr_r2()`, `stats_mode()`
 
 **Existence** (1): `exists()`
+
+**Advanced** (2): `max_neg_delta_dv()`, `temporal_regularity()`
 
 ## Advanced Usage
 

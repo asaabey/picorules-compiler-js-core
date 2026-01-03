@@ -135,7 +135,7 @@ describe('generateManifest', () => {
 
     // PostgreSQL
     const pgManifest = generateManifest(ruleblocks, graph, Dialect.POSTGRESQL);
-    expect(pgManifest.entries[0].targetTable).toBe('srout_ckd');
+    expect(pgManifest.entries[0].targetTable).toBe('rout_ckd');
   });
 
   it('should include compiledAt timestamp', () => {
