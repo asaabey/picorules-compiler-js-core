@@ -1,7 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
+import { describe, it, expect, vi } from 'vitest';
 import { compile, Dialect } from '../../src';
 
 describe('compile', () => {
@@ -106,21 +103,10 @@ describe('compile', () => {
     expect(result.success).toBe(false);
   });
 
-  describe('manifestPath option', () => {
-    let tempDir: string;
+  describe('manifestPath option (deprecated)', () => {
+    it('should emit deprecation warning when manifestPath is specified', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    beforeEach(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'compile-manifest-test-'));
-    });
-
-    afterEach(() => {
-      if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-    });
-
-    it('should write manifest to file when manifestPath is specified', () => {
-      const manifestPath = path.join(tempDir, 'output-manifest.json');
       const ruleblocks = [
         {
           name: 'test',
@@ -131,22 +117,20 @@ describe('compile', () => {
 
       const result = compile(ruleblocks, {
         dialect: Dialect.MSSQL,
-        manifestPath,
+        manifestPath: '/tmp/test-manifest.json',
       });
 
       expect(result.success).toBe(true);
-      expect(fs.existsSync(manifestPath)).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('manifestPath option is deprecated')
+      );
 
-      const fileContent = fs.readFileSync(manifestPath, 'utf-8');
-      const parsed = JSON.parse(fileContent);
-
-      expect(parsed.version).toBe('1.0.0');
-      expect(parsed.dialect).toBe('mssql');
-      expect(parsed.entries).toHaveLength(1);
-      expect(parsed.entries[0].ruleblockId).toBe('test');
+      consoleSpy.mockRestore();
     });
 
-    it('should not write manifest file when manifestPath is not specified', () => {
+    it('should still include manifest in result even when manifestPath is deprecated', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       const ruleblocks = [
         {
           name: 'test',
@@ -155,12 +139,16 @@ describe('compile', () => {
         },
       ];
 
-      const result = compile(ruleblocks, { dialect: Dialect.MSSQL });
+      const result = compile(ruleblocks, {
+        dialect: Dialect.MSSQL,
+        manifestPath: '/tmp/test-manifest.json',
+      });
 
       expect(result.success).toBe(true);
-      // No file should be created (no manifestPath specified)
-      const files = fs.readdirSync(tempDir);
-      expect(files).toHaveLength(0);
+      expect(result.manifest).toBeDefined();
+      expect(result.manifest!.entries).toHaveLength(1);
+
+      consoleSpy.mockRestore();
     });
   });
 });

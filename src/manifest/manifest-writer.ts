@@ -1,3 +1,10 @@
+/**
+ * Node.js-only manifest file writer
+ *
+ * This module requires Node.js and cannot be used in browser environments.
+ * For browser-safe manifest serialization, use serializeManifest from manifest-serializer.ts
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import type { CompilationManifest } from '../models/types';
@@ -18,7 +25,7 @@ const DEFAULT_OPTIONS: Required<WriteManifestOptions> = {
 };
 
 /**
- * Write a compilation manifest to a JSON file
+ * Write a compilation manifest to a JSON file (Node.js only)
  *
  * @param manifest - The compilation manifest to write
  * @param outputPath - Path to the output JSON file
@@ -47,22 +54,4 @@ export function writeManifestFile(
 
   // Write file
   fs.writeFileSync(outputPath, content, 'utf-8');
-}
-
-/**
- * Write a compilation manifest to a JSON string
- *
- * @param manifest - The compilation manifest to serialize
- * @param prettyPrint - Whether to pretty print (default: true)
- * @param indent - Indentation spaces (default: 2)
- * @returns JSON string representation of the manifest
- */
-export function serializeManifest(
-  manifest: CompilationManifest,
-  prettyPrint: boolean = true,
-  indent: number = 2
-): string {
-  return prettyPrint
-    ? JSON.stringify(manifest, null, indent)
-    : JSON.stringify(manifest);
 }

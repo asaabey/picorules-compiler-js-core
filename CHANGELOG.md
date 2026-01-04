@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-01-04
+
+### Fixed
+- **Browser compatibility**: Separated Node.js-only code (`writeManifestFile`) into a separate entry point (`picorules-compiler-js-core/node`). The main entry point no longer imports `fs` module, allowing the package to work in browser environments (Next.js, Vite, etc.)
+
+### Added
+- New entry point `picorules-compiler-js-core/node` for Node.js-only functionality:
+  - `writeManifestFile()` - writes compilation manifest to filesystem
+  - `WriteManifestOptions` type
+
+## [1.0.6] - 2026-01-03
+
+### Added
+- Compilation manifest generation with `generateManifest()` and `serializeManifest()`
+- PostgreSQL dialect support with full feature parity to Oracle and MSSQL
+
 ## [1.0.0] - 2026-01-01
 
 ### 🎉 Initial Production Release

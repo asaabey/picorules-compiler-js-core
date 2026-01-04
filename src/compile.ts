@@ -4,7 +4,7 @@ import { parse } from './parsing';
 import { link, buildDependencyGraph } from './linking';
 import { transform } from './transformation';
 import { generateSql } from './sql';
-import { generateManifest, writeManifestFile } from './manifest';
+import { generateManifest } from './manifest';
 import { Dialect } from './models/constants';
 
 /**
@@ -45,9 +45,12 @@ export function compile(
     const dependencyGraph = buildDependencyGraph(transformed);
     const manifest = generateManifest(transformed, dependencyGraph, validatedOptions.dialect);
 
-    // Stage 6: Write manifest file (if path specified)
+    // Note: manifestPath option is deprecated in the browser-compatible version.
+    // Use writeManifestFile from 'picorules-compiler-js-core/node' separately.
     if (validatedOptions.manifestPath) {
-      writeManifestFile(manifest, validatedOptions.manifestPath);
+      console.warn(
+        'manifestPath option is deprecated. Use writeManifestFile from "picorules-compiler-js-core/node" instead.'
+      );
     }
 
     const totalTime = Date.now() - startTime;
