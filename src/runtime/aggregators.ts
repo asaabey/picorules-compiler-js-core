@@ -97,13 +97,23 @@ export function avg(records: DataRecord[]): number | null {
   return nums.reduce((acc, r) => acc + r.val, 0) / nums.length;
 }
 
-export function min(records: DataRecord[]): number | null {
+export function min(records: DataRecord[]): number | Date | null {
+  // Handle Date values (when property is 'dt')
+  const dateVals = records.filter(r => r.val instanceof Date).map(r => r.val as Date);
+  if (dateVals.length > 0) {
+    return new Date(Math.min(...dateVals.map(d => d.getTime())));
+  }
   const nums = nonNullNumericRecords(records);
   if (nums.length === 0) return null;
   return Math.min(...nums.map(r => r.val));
 }
 
-export function max(records: DataRecord[]): number | null {
+export function max(records: DataRecord[]): number | Date | null {
+  // Handle Date values (when property is 'dt')
+  const dateVals = records.filter(r => r.val instanceof Date).map(r => r.val as Date);
+  if (dateVals.length > 0) {
+    return new Date(Math.max(...dateVals.map(d => d.getTime())));
+  }
   const nums = nonNullNumericRecords(records);
   if (nums.length === 0) return null;
   return Math.max(...nums.map(r => r.val));

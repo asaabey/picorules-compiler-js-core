@@ -89,14 +89,18 @@ export function least(...args: (number | null)[]): number | null {
 // if ALL inputs are null)
 // ---------------------------------------------------------------------------
 
-export function greatest_date(...dates: (Date | null | undefined)[]): Date | null {
-  const valid = dates.filter((d): d is Date => d != null);
+export function greatest_date(...dates: (Date | string | number | null | undefined)[]): Date | null {
+  const valid = dates
+    .map(d => d == null ? null : (d instanceof Date ? d : new Date(d as any)))
+    .filter((d): d is Date => d != null && !isNaN(d.getTime()));
   if (valid.length === 0) return null;
   return new Date(Math.max(...valid.map(d => d.getTime())));
 }
 
-export function least_date(...dates: (Date | null | undefined)[]): Date | null {
-  const valid = dates.filter((d): d is Date => d != null);
+export function least_date(...dates: (Date | string | number | null | undefined)[]): Date | null {
+  const valid = dates
+    .map(d => d == null ? null : (d instanceof Date ? d : new Date(d as any)))
+    .filter((d): d is Date => d != null && !isNaN(d.getTime()));
   if (valid.length === 0) return null;
   return new Date(Math.min(...valid.map(d => d.getTime())));
 }

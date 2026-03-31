@@ -112,8 +112,20 @@ function evaluateFetch(
     records = applyWherePredicate(records, stmt.predicate, context);
   }
 
+  // When property is 'dt', the rule wants to aggregate dates not values.
+  // Map records so that .val contains the date for non-DV functions.
+  // For DV functions (property '_'), both val and dt are returned as-is.
+  let effectiveRecords = records;
+  if (stmt.property === 'dt' && !DV_FUNCTIONS.has(stmt.functionName)) {
+    effectiveRecords = records.map(r => {
+      // Ensure dt is a proper Date object for date-returning functions
+      const dt = r.dt instanceof Date ? r.dt : (r.dt != null ? new Date(r.dt as any) : null);
+      return { val: dt as any, dt };
+    });
+  }
+
   // Apply aggregation function
-  const result = dispatchAggregation(stmt.functionName, records, stmt.functionParams);
+  const result = dispatchAggregation(stmt.functionName, effectiveRecords, stmt.functionParams);
 
   // Store result(s) in context
   if (DV_FUNCTIONS.has(stmt.functionName) && result != null && typeof result === 'object' && 'val' in result) {
@@ -137,8 +149,9 @@ function evaluateCompute(
 
   // Evaluate conditions left-to-right; first matching predicate wins
   for (const condition of stmt.conditions) {
-    if (!condition.predicate) {
-      // Default/else branch — always matches
+    if (!condition.predicate || condition.predicate.trim() === '.') {
+      // Default/else branch or dot shorthand — always matches
+      // In picorules, { . => expr } means "always evaluate this expression"
       context[varName] = evaluateReturnValue(condition.returnValue, context, varName);
       return;
     }
