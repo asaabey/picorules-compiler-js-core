@@ -13,15 +13,18 @@
 // ---------------------------------------------------------------------------
 
 export interface DataRecord {
-  val: number | string | null;
+  val: number | string | Date | null;
   dt: Date | null;
 }
 
 /** Returned by DV (date-value) functions that produce two columns. */
 export interface DvResult {
-  val: number | string | null;
+  val: number | string | Date | null;
   dt: Date | null;
 }
+
+/** Union type for all possible values in records and results. */
+type Value = number | string | Date | null;
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -62,14 +65,14 @@ function nonNullNumericRecords(records: DataRecord[]): { val: number; dt: Date |
 // ---------------------------------------------------------------------------
 
 /** Most recent value (sorted by date descending). */
-export function last(records: DataRecord[]): number | string | null {
+export function last(records: DataRecord[]): Value {
   if (records.length === 0) return null;
   const sorted = sortByDateDesc(records);
   return sorted[0].val;
 }
 
 /** Earliest value (sorted by date ascending). */
-export function first(records: DataRecord[]): number | string | null {
+export function first(records: DataRecord[]): Value {
   if (records.length === 0) return null;
   const sorted = sortByDateAsc(records);
   return sorted[0].val;
@@ -139,7 +142,7 @@ export function distinct_count(records: DataRecord[]): number {
 // ---------------------------------------------------------------------------
 
 /** Nth most recent value (1-based, default n=1 which is same as last). */
-export function nth(records: DataRecord[], params?: string[]): number | string | null {
+export function nth(records: DataRecord[], params?: string[]): Value {
   const n = params && params.length > 0 ? parseInt(params[0], 10) : 1;
   if (records.length === 0 || n < 1) return null;
   const sorted = sortByDateDesc(records);
@@ -256,7 +259,7 @@ export function serializedv(records: DataRecord[], params?: string[]): string | 
 export function serializedv2(
   records: DataRecord[],
   params?: string[],
-  formatFn?: (val: number | string | null, dt: Date | null) => string
+  formatFn?: (val: Value, dt: Date | null) => string
 ): string | null {
   if (records.length === 0) return null;
   const sorted = sortByDateAsc(records);
@@ -358,16 +361,16 @@ function prepareRegressionData(records: DataRecord[]): RegressionData | null {
 // ---------------------------------------------------------------------------
 
 /** Returns the most frequently occurring value. Ties broken by value (ascending). */
-export function stats_mode(records: DataRecord[]): number | string | null {
+export function stats_mode(records: DataRecord[]): Value {
   if (records.length === 0) return null;
-  const counts = new Map<string | number, number>();
+  const counts = new Map<string | number | Date, number>();
   for (const r of records) {
     if (r.val == null) continue;
     counts.set(r.val, (counts.get(r.val) ?? 0) + 1);
   }
   if (counts.size === 0) return null;
 
-  let bestVal: string | number | null = null;
+  let bestVal: Value = null;
   let bestCount = 0;
   for (const [val, cnt] of counts) {
     if (cnt > bestCount || (cnt === bestCount && bestVal != null && String(val) < String(bestVal))) {
@@ -458,7 +461,7 @@ export function dispatchAggregation(
   functionName: string,
   records: DataRecord[],
   params?: string[]
-): number | string | DvResult | null {
+): Value | DvResult {
   switch (functionName) {
     // Basic
     case 'last':            return last(records);

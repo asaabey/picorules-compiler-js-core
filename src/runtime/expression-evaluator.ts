@@ -400,7 +400,8 @@ class ExpressionParser {
     if (this.peek().type === TokenType.Minus) {
       this.advance();
       const val = this.parseUnary();
-      return val == null ? null : -toNum(val);
+      const n = toNum(val);
+      return n == null ? null : -n;
     }
     return this.parseAtom();
   }
