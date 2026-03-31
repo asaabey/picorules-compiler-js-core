@@ -167,6 +167,28 @@ export function to_char(x: unknown, fmt?: string): string | null {
   return String(x);
 }
 
+/**
+ * SQL-compatible to_date. Parses a string into a Date using a format mask.
+ * Supports common Oracle format strings used in the ruleblock corpus.
+ */
+export function to_date(str: string | null, fmt?: string): Date | null {
+  if (str == null) return null;
+  if (!fmt) return new Date(str);
+  const upper = fmt.toUpperCase();
+  if (upper === 'YYYYMMDD' && str.length === 8) {
+    const y = parseInt(str.substring(0, 4), 10);
+    const m = parseInt(str.substring(4, 6), 10) - 1;
+    const d = parseInt(str.substring(6, 8), 10);
+    return new Date(y, m, d);
+  }
+  if (upper === 'YYYY-MM-DD' && str.length === 10) {
+    return new Date(str);
+  }
+  // Fallback: let Date constructor try
+  const result = new Date(str);
+  return isNaN(result.getTime()) ? null : result;
+}
+
 // ---------------------------------------------------------------------------
 // Date functions
 // ---------------------------------------------------------------------------

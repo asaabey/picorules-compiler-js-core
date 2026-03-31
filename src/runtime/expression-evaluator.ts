@@ -209,6 +209,7 @@ const FUNCTIONS: Record<string, (...args: any[]) => any> = {
   substr:         pico.substr,
   to_number:      pico.to_number,
   to_char:        pico.to_char,
+  to_date:        pico.to_date,
 };
 
 class ExpressionParser {
@@ -363,11 +364,11 @@ class ExpressionParser {
       if (this.peek().type === TokenType.Plus) {
         this.advance();
         const right = this.parseMultiply();
-        left = pico.add(toNum(left), toNum(right));
+        left = smartAdd(left, right);
       } else if (this.peek().type === TokenType.Minus) {
         this.advance();
         const right = this.parseMultiply();
-        left = pico.subtract(toNum(left), toNum(right));
+        left = smartSubtract(left, right);
       } else {
         break;
       }
@@ -453,20 +454,21 @@ class ExpressionParser {
         return this.parseFunctionCall(name);
       }
 
-      // Variable reference — look up in context
+      // Variable reference — look up in context first
       const lowerName = name.toLowerCase();
 
-      // Special: 'sysdate' without parens
-      if (lowerName === 'sysdate') {
-        return pico.sysdate();
-      }
-
+      // Check context (exact match)
       const val = this.context[name];
       if (val !== undefined) return val;
 
-      // Try case-insensitive lookup
+      // Check context (case-insensitive)
       for (const key of Object.keys(this.context)) {
         if (key.toLowerCase() === lowerName) return this.context[key];
+      }
+
+      // Special: 'sysdate' without parens — only if not in context
+      if (lowerName === 'sysdate') {
+        return pico.sysdate();
       }
 
       // Undefined variables are null (matching SQL behaviour)
@@ -477,6 +479,13 @@ class ExpressionParser {
   }
 
   private parseFunctionCall(name: string): any {
+    const lowerName = name.toLowerCase();
+
+    // Special case: extract(year from expr) — SQL EXTRACT syntax
+    if (lowerName === 'extract') {
+      return this.parseExtract();
+    }
+
     this.expect(TokenType.LParen);
     const args: any[] = [];
 
@@ -490,12 +499,45 @@ class ExpressionParser {
     this.expect(TokenType.RParen);
 
     // Look up function
-    const fn = FUNCTIONS[name.toLowerCase()];
+    const fn = FUNCTIONS[lowerName];
     if (fn) {
       return fn(...args);
     }
 
     throw new Error(`Unknown function: ${name}`);
+  }
+
+  /**
+   * Parse extract(year from expr) / extract(month from expr) / extract(day from expr)
+   */
+  private parseExtract(): any {
+    this.expect(TokenType.LParen);
+
+    // Read the part name (year, month, day) — it's an identifier
+    const partToken = this.expect(TokenType.Identifier);
+    const part = partToken.value.toLowerCase();
+
+    // Expect 'from' — also an identifier in our tokenizer
+    const fromToken = this.expect(TokenType.Identifier);
+    if (fromToken.value.toLowerCase() !== 'from') {
+      throw new Error(`Expected 'from' in extract() but got '${fromToken.value}'`);
+    }
+
+    // Parse the date expression
+    const dateExpr = this.parseOr();
+    this.expect(TokenType.RParen);
+
+    if (dateExpr == null) return null;
+    const d = dateExpr instanceof Date ? dateExpr : new Date(dateExpr);
+    if (isNaN(d.getTime())) return null;
+
+    switch (part) {
+      case 'year':  return d.getFullYear();
+      case 'month': return d.getMonth() + 1;
+      case 'day':   return d.getDate();
+      default:
+        throw new Error(`Unsupported extract part: ${part}`);
+    }
   }
 
   private parseList(): any[] {
@@ -510,6 +552,64 @@ class ExpressionParser {
     this.expect(TokenType.RParen);
     return items;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Type coercion helpers
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Type-aware arithmetic (Date-aware +/- operators)
+// ---------------------------------------------------------------------------
+
+/** Check if a value is a Date (or Date-like from the evaluator). */
+function isDate(val: any): val is Date {
+  return val instanceof Date;
+}
+
+/**
+ * Type-aware addition:
+ *   Date + Number → new Date (add N days)
+ *   Number + Date → new Date (add N days)
+ *   String + any  → string concatenation
+ *   any + String  → string concatenation
+ *   Number + Number → number addition (null-safe)
+ */
+function smartAdd(left: any, right: any): any {
+  if (left == null || right == null) {
+    // String concatenation treats null as empty (matching SQL concat behaviour)
+    if (typeof left === 'string' || typeof right === 'string') {
+      return String(left ?? '') + String(right ?? '');
+    }
+    return null;
+  }
+  if (isDate(left) && typeof right === 'number') {
+    return pico.dateAdd(left, right);
+  }
+  if (typeof left === 'number' && isDate(right)) {
+    return pico.dateAdd(right, left);
+  }
+  if (typeof left === 'string' || typeof right === 'string') {
+    return String(left) + String(right);
+  }
+  return pico.add(toNum(left), toNum(right));
+}
+
+/**
+ * Type-aware subtraction:
+ *   Date - Date   → number of days between them
+ *   Date - Number → new Date (subtract N days)
+ *   Number - Number → number subtraction (null-safe)
+ */
+function smartSubtract(left: any, right: any): any {
+  if (left == null || right == null) return null;
+  if (isDate(left) && isDate(right)) {
+    return pico.daysBetween(left, right);
+  }
+  if (isDate(left) && typeof right === 'number') {
+    return pico.dateAdd(left, -right);
+  }
+  return pico.subtract(toNum(left), toNum(right));
 }
 
 // ---------------------------------------------------------------------------
